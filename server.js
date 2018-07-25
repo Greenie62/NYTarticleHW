@@ -4,10 +4,17 @@ const bodyParser = require("body-parser");
 const PORT = process.env.PORT || 3001;
 const app = express();
 const mongoose=require('mongoose');
+const mongojs=require('mongojs');
 
-var db=require('./models')
+const databaseUrl="Articles";
+const collections=["Articles"];
 
-mongoose.connect("mongodb://localhost/Articles");
+const db=mongojs(databaseUrl,collections)
+//Mongoose has been  MONGO waste of my time in connection to database 
+// for some reason. MongoJS connects like a charm.
+//var db=require('./models')
+
+//mongoose.connect("mongodb://localhost/Articles");
 
 // Define middleware here
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -23,12 +30,20 @@ var savedArticle={};
 app.post('/saveArticle',(req,res)=>{
   savedArticle=req.body;
   console.log(req.body)
-  db.Articles.create({title:savedArticle.article,key:savedArticle.id}).then(function(dbArticle){
-    console.log(dbArticle).catch(function(err){console.log(err)})
-   
-  
+  db.Articles.insert({title:savedArticle.article,key:savedArticle.id},function(err){
+    if(err){
+    console.log(err)}
+    else{console.log("posted!")}
   })
   res.end()
+})
+
+app.get("/savedArticles",(req,res)=>{
+  db.Articles.find({},function(err,data){
+    if(err){console.log(err)}
+    else{console.log(data)
+    res.send(data)}
+  })
 })
 
 // Send every other request to the React app
